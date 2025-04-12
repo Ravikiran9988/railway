@@ -43,8 +43,11 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // ✅ API Routes
 app.use('/api/auth', authRoutes);         // e.g. /api/auth/send-otp
-app.use('/api/dashboard', dashboardRoutes); // e.g. /api/dashboard/data
-app.use('/api/submission', submissionRoutes); // e.g. /api/submission/analyze
+app.use('/api', authRoutes); // Includes /user/me route
+app.use('/api', dashboardRoutes);
+app.use('/api', submissionRoutes);
+app.use('/api', authRoutes); // Includes /user/me route
+
 
 // ✅ Health check
 app.get('/', (req, res) => {
