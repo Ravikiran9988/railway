@@ -3,7 +3,6 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config();
-
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const submissionRoutes = require('./routes/submission');
 const authRoutes = require('./routes/auth');
@@ -41,7 +40,10 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log('✅ MongoDB connected'))
 .catch(err => console.error('❌ MongoDB Error:', err));
 
-// ✅ API Routes         // e.g. /api/auth/send-otp
+// ✅ API Routes
+app.use('/api/auth', authRoutes);         // e.g. /api/auth/send-otp
+app.use('/api/dashboard', dashboardRoutes); // e.g. /api/dashboard/data
+app.use('/api/submission', submissionRoutes); // e.g. /api/submission/analyze
 app.use('/api', dashboardRoutes);
 app.use('/api', submissionRoutes);
 app.use('/api', authRoutes); // Includes /user/me route
@@ -58,5 +60,5 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(🚀 Server running at http://localhost:${PORT});
 });
