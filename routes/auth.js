@@ -107,7 +107,7 @@ router.post('/login', async (req, res) => {
 });
 
 // ✅ GET /user/me
-router.get('/auth/me', authMiddleware, async (req, res) => {
+router.get('/user/me', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('username email');
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -120,7 +120,7 @@ router.get('/auth/me', authMiddleware, async (req, res) => {
 });
 
 // ✅ PUT /user/update-profile
-router.put('/auth/update-profile', authMiddleware, async (req, res) => {
+router.put('/user/update-profile', authMiddleware, async (req, res) => {
   const { username, email } = req.body;
 
   if (!username || !email) {
