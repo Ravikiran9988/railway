@@ -11,10 +11,6 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Exporting app and port if used in test or other modules
-exports.app = app;
-exports.PORT = PORT;
-
 // ✅ Middleware
 app.use(cors());
 app.use(express.json()); // Parses application/json
@@ -40,6 +36,5 @@ app.get('/', (req, res) => {
 
 // ✅ Start server
 app.listen(PORT, () => {
-  console.log ('🚀 Server running on http://localhost:${PORT}');
-
-  });
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
