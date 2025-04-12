@@ -61,7 +61,6 @@ router.post('/verify-otp', async (req, res) => {
       return res.status(400).json({ message: 'Invalid OTP' });
     }
 
-    // Optional check for OTP expiry
     if (user.otpExpires && user.otpExpires < Date.now()) {
       return res.status(400).json({ message: 'OTP has expired' });
     }
@@ -112,8 +111,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// ✅ GET /user/me - Fetch profile
-router.get('/user/me', authMiddleware, async (req, res) => {
+// ✅ GET /me - Fetch user profile
+router.get('/me', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('username email');
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -125,8 +124,8 @@ router.get('/user/me', authMiddleware, async (req, res) => {
   }
 });
 
-// ✅ PUT /user/update-profile
-router.put('/user/update-profile', authMiddleware, async (req, res) => {
+// ✅ PUT /update-profile
+router.put('/update-profile', authMiddleware, async (req, res) => {
   const { username, email } = req.body;
 
   if (!username || !email) {
@@ -156,6 +155,32 @@ router.put('/user/update-profile', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('❌ Update Profile Error:', err.message);
     res.status(500).json({ message: 'Error updating profile' });
+  }
+});
+
+// ✅ PUT /change-password
+router.put('/change-password', authMiddleware, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: 'Both fields are required' });
+  }
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return res.status(400).json({ message: 'Incorrect current password' });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
+    await user.save();
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('❌ Change Password Error:', err.message);
+    res.status(500).json({ message: 'Error changing password' });
   }
 });
 
