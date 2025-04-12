@@ -41,9 +41,7 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log('✅ MongoDB connected'))
 .catch(err => console.error('❌ MongoDB Error:', err));
 
-// ✅ API Routes
-app.use('/api/auth', authRoutes);         // e.g. /api/auth/send-otp
-app.use('/api', authRoutes); // Includes /user/me route
+// ✅ API Routes         // e.g. /api/auth/send-otp
 app.use('/api', dashboardRoutes);
 app.use('/api', submissionRoutes);
 app.use('/api', authRoutes); // Includes /user/me route
