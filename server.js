@@ -47,7 +47,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // ✅ API Routes
 app.use('/api/auth', authRoutes);               // /api/auth/login, /register, /send-otp, /me
-app.use('/api/dashboard', dashboardRoutes);     // /api/dashboard/data
+app.use('/api/dashboardRoutes', dashboardRoutes);     // /api/dashboard/data
 app.use('/api/submission', submissionRoutes);   // /api/submission/analyze
 
 // ❌ REMOVE Redundant routes — You already declared them above with correct prefixes
