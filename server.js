@@ -12,8 +12,11 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ✅ Middleware
-app.use(cors());
-app.use(express.json()); // Parses application/json
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://radiant-phi-ten.vercel.app'],
+  credentials: true
+}));
+app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ✅ Connect to MongoDB
@@ -27,9 +30,9 @@ mongoose.connect(process.env.MONGO_URI, {
 // ✅ API Routes
 app.use('/api', dashboardRoutes);
 app.use('/api', submissionRoutes);
-app.use('/api', authRoutes); // Includes /user/me route
+app.use('/api', authRoutes);
 
-// ✅ Health check / root route
+// ✅ Health check
 app.get('/', (req, res) => {
   res.send('🌟 Radiant Skincare API');
 });
@@ -38,3 +41,4 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
+
