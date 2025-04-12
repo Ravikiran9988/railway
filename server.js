@@ -4,10 +4,9 @@ const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config();
 
-// Import routes
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const submissionRoutes = require('./routes/submission');
-const authRoutes = require('./routes/auth'); // Make sure this includes /me route
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -31,6 +30,33 @@ app.use(cors({
   credentials: true
 }));
 
+// ✅ Handle preflight requests for all routes
+app.options('*', cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
+// ✅ Optional: Explicit CORS headers (safety net)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', allowedOrigins.includes(req.headers.origin) ? req.headers.origin : '');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  next();
+});
+
+// ✅ Log all request origins (for debugging)
+app.use((req, res, next) => {
+  console.log('🌍 Request Origin:', req.headers.origin);
+  next();
+});
+
 // ✅ JSON Body Parser
 app.use(express.json());
 
@@ -47,13 +73,8 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // ✅ API Routes
 app.use('/api/auth', authRoutes);               // /api/auth/login, /register, /send-otp, /me
-app.use('/api', dashboardRoutes);     // /api/dashboard/data
+app.use('/api', dashboardRoutes);               // /api/dashboard/data
 app.use('/api/submission', submissionRoutes);   // /api/submission/analyze
-
-// ❌ REMOVE Redundant routes — You already declared them above with correct prefixes
-// app.use('/api', dashboardRoutes);
-// app.use('/api', submissionRoutes);
-// app.use('/api', authRoutes);
 
 // ✅ Health Check
 app.get('/', (req, res) => {
