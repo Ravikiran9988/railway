@@ -6,8 +6,8 @@ const User = require('../models/User1');
 const sendEmail = require('../utils/sendEmail');
 const authMiddleware = require('../middleware/auth');
 
-// ✅ POST /register - Register & send OTP
-router.post('/register', async (req, res) => {
+// ✅ POST /send-otp - Register & send OTP to email
+router.post('/send-otp', async (req, res) => {
   const { username, email, password } = req.body;
 
   if (!username || !email || !password) {
@@ -28,12 +28,12 @@ router.post('/register', async (req, res) => {
       email: email.trim(),
       password: hashed,
       otp,
-      isVerified: false
+      isVerified: false,
+      otpExpires: Date.now() + 10 * 60 * 1000 // Optional: OTP valid for 10 minutes
     });
 
     await user.save();
 
-    // Fix template string
     await sendEmail(
       email.trim(),
       'Verify your Radiant Skincare account',
@@ -42,12 +42,12 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({ message: 'OTP sent to email' });
   } catch (err) {
-    console.error('Register Error:', err);
+    console.error('❌ Register Error:', err.message);
     res.status(500).json({ message: 'Error registering user' });
   }
 });
 
-// ✅ POST /verify-otp
+// ✅ POST /verify-otp - Verify OTP
 router.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
 
@@ -61,13 +61,19 @@ router.post('/verify-otp', async (req, res) => {
       return res.status(400).json({ message: 'Invalid OTP' });
     }
 
+    // Optional check for OTP expiry
+    if (user.otpExpires && user.otpExpires < Date.now()) {
+      return res.status(400).json({ message: 'OTP has expired' });
+    }
+
     user.isVerified = true;
     user.otp = null;
+    user.otpExpires = null;
     await user.save();
 
     res.json({ message: 'Email verified successfully' });
   } catch (err) {
-    console.error('OTP Verification Error:', err);
+    console.error('❌ OTP Verification Error:', err.message);
     res.status(500).json({ message: 'Error verifying OTP' });
   }
 });
@@ -101,12 +107,12 @@ router.post('/login', async (req, res) => {
 
     res.json({ token });
   } catch (err) {
-    console.error('Login Error:', err);
+    console.error('❌ Login Error:', err.message);
     res.status(500).json({ message: 'Login error' });
   }
 });
 
-// ✅ GET /user/me
+// ✅ GET /user/me - Fetch profile
 router.get('/user/me', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('username email');
@@ -114,7 +120,7 @@ router.get('/user/me', authMiddleware, async (req, res) => {
 
     res.json({ username: user.username, email: user.email });
   } catch (err) {
-    console.error('Fetch Profile Error:', err);
+    console.error('❌ Fetch Profile Error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -128,6 +134,11 @@ router.put('/user/update-profile', authMiddleware, async (req, res) => {
   }
 
   try {
+    const existingEmail = await User.findOne({ email: email.trim() });
+    if (existingEmail && existingEmail._id.toString() !== req.user.id) {
+      return res.status(400).json({ message: 'Email already in use' });
+    }
+
     const updated = await User.findByIdAndUpdate(
       req.user.id,
       {
@@ -143,7 +154,7 @@ router.put('/user/update-profile', authMiddleware, async (req, res) => {
 
     res.json({ username: updated.username, email: updated.email });
   } catch (err) {
-    console.error('Update Profile Error:', err);
+    console.error('❌ Update Profile Error:', err.message);
     res.status(500).json({ message: 'Error updating profile' });
   }
 });
