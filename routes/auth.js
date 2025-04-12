@@ -21,7 +21,7 @@ router.post('/send-otp', async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString().trim();
 
     const user = new User({
       username: username.trim(),
@@ -29,7 +29,7 @@ router.post('/send-otp', async (req, res) => {
       password: hashed,
       otp,
       isVerified: false,
-      otpExpires: Date.now() + 10 * 60 * 1000 // Optional: OTP valid for 10 minutes
+      otpExpires: Date.now() + 10 * 60 * 1000 // OTP valid for 10 minutes
     });
 
     await user.save();
@@ -37,7 +37,7 @@ router.post('/send-otp', async (req, res) => {
     await sendEmail(
       email.trim(),
       'Verify your Radiant Skincare account',
-      `Your OTP is ${otp}`
+      `Your OTP is: <b>${otp}</b><br>This OTP will expire in 10 minutes.`
     );
 
     res.status(201).json({ message: 'OTP sent to email' });
@@ -57,12 +57,16 @@ router.post('/verify-otp', async (req, res) => {
 
   try {
     const user = await User.findOne({ email: email.trim() });
-    if (!user || user.otp !== otp) {
-      return res.status(400).json({ message: 'Invalid OTP' });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
     }
 
     if (user.otpExpires && user.otpExpires < Date.now()) {
       return res.status(400).json({ message: 'OTP has expired' });
+    }
+
+    if (user.otp !== otp.trim()) {
+      return res.status(400).json({ message: 'Invalid OTP' });
     }
 
     user.isVerified = true;
@@ -104,7 +108,7 @@ router.post('/login', async (req, res) => {
       expiresIn: '7d'
     });
 
-    res.json({ token });
+    res.json({ token, username: user.username, email: user.email });
   } catch (err) {
     console.error('❌ Login Error:', err.message);
     res.status(500).json({ message: 'Login error' });
