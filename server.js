@@ -16,6 +16,7 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
   'http://localhost:5173',
   'https://radiant-phi-ten.vercel.app'
+  'https://radiant-phi-ten.vercel.app/register'
 ];
 
 // ✅ CORS Middleware
